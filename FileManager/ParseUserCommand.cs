@@ -3,16 +3,18 @@ using System.IO;
 
 namespace FileManager
 {
-    public class UserInput
+    internal class ParseUserCommand
     {
         private string _path;
         private readonly PathWork _pathWork;
         private readonly Directories _directories;
+        private readonly FileWork _fileWork;
 
-        public UserInput()
+        public ParseUserCommand()
         {
             _pathWork = new PathWork();
             _directories = new Directories();
+            _fileWork = new FileWork();
         }
 
         public void Input(string str)
@@ -57,27 +59,51 @@ namespace FileManager
                 }
                     break;
 
+                case "move":
+                {
+                        _directories.MoveCatalog();
+                }
+                    break;
+
                 case "copy":
                 {
-
+                    Console.WriteLine("Данная команда пока в разработе");
                 }
                     break;
 
                 case "create":
                 {
-
+                        _directories.CreateCatalog();
                 }
                     break;
 
                 case "rename":
                 {
+                        _directories.Rename();
+                }
+                    break;
 
+                case "open":
+                {
+                    _fileWork.StartApplication();
                 }
                     break;
 
                 case "resize":
                 {
+                    Console.WriteLine("Введите название файла, если хотите узнать размер файла\n" +
+                                      "В противном случае нажмите Enter");
 
+                    string userInput = Console.ReadLine();
+
+                    if (string.IsNullOrEmpty(userInput))
+                    {
+                            _directories.ResizeCatalog();
+                    }
+                    else
+                    {
+                        _fileWork.ResizeFile(userInput);
+                    }
                 }
                     break;
 
@@ -94,7 +120,9 @@ namespace FileManager
                     break;
 
                     default:
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine("Неизвестная команда, попробуйте еще раз\n");
+                        Console.ResetColor();
                         break;
             }
         }

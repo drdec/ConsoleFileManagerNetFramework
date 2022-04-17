@@ -1,10 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace FileManager
 {
     internal class Directories
     {
+        private readonly PathWork Path;
+
+        public Directories()
+        {
+            Path = new PathWork();
+        }
+
+        /// <summary>
+        /// Вывод на экран консоли информации о нахождении в папке
+        /// файлов и каталогов
+        /// </summary>
         public void PrintDirectoriesAndFiles()
         {
             Console.WriteLine("Подкаталоги");
@@ -35,13 +49,22 @@ namespace FileManager
             }
         }
 
+        /// <summary>
+        /// удаляет директорию вместе с внутренними файлами
+        /// </summary>
         public void DeleteDirectory()
         {
             DirectoryInfo dir = new DirectoryInfo(PathWork.GetCurrentPath());
             dir.Delete(true);
             Console.WriteLine("Каталог удален");
+            Path.BackToLastCatalog();
         }
 
+
+        /// <summary>
+        /// удаляет выбранный файл
+        /// </summary>
+        /// <param name="file">имя файла с расширением</param>
         public void DeleteFile(string file)
         {
             string path = PathWork.GetCurrentPath();
@@ -57,9 +80,117 @@ namespace FileManager
             Console.WriteLine("Файл удален");
         }
 
+
+        /// <summary>
+        /// Создает новый каталог
+        /// </summary>
         public void CreateCatalog()
         {
+            Console.WriteLine("Введите название создаваемого каталога!");
+            string catalogName = Console.ReadLine();
 
+            Directory.CreateDirectory(PathWork.GetCurrentPath() + "\\" + catalogName);
+        }
+
+
+        /// <summary>
+        /// Перемещает каталог по новому пути!
+        /// </summary>
+        public void MoveCatalog()
+        {
+            Console.WriteLine("укажите путь, куда должен быть перемещен каталог");
+            string catalogPath = Console.ReadLine();
+
+            if (!string.IsNullOrEmpty(catalogPath))
+            {
+                Directory.Move(PathWork.GetCurrentPath(), catalogPath);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("путь не должен быть пустым!!!");
+                Console.ResetColor();
+            }
+
+            Path.BackToLastCatalog();
+        }
+
+        /// <summary>
+        /// Переименовывает каталог, в котором вы находитесь
+        /// </summary>
+        public void Rename()
+        {
+            Console.WriteLine("Укажите новое название каталога");
+            string name = Console.ReadLine();
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                string newPath = Path.BackToLastCatalog(PathWork.GetCurrentPath());
+                Directory.Move(PathWork.GetCurrentPath(), newPath + "\\" + name);
+                Console.WriteLine("каталог успешно переименован!");
+                Path.BackToLastCatalog();
+            }
+        }
+
+        public void ResizeCatalog()
+        {
+
+            long dirSize = SafeEnumerateFiles(PathWork.GetCurrentPath(), "*.*", SearchOption.AllDirectories)
+                .Sum(n => new FileInfo(n).Length);
+            
+            Console.WriteLine($"Размер файла - {dirSize} байт");
+            double size = (double)dirSize / 1048576;
+            Console.WriteLine($"Размер файла - {size} MБ");
+        }
+
+        private static IEnumerable<string> SafeEnumerateFiles(string path, string searchPattern = "*.*",
+            SearchOption searchOption = SearchOption.TopDirectoryOnly)
+        {
+            var dirs = new Stack<string>();
+            dirs.Push(path);
+
+            while (dirs.Count > 0)
+            {
+                string currentDirPath = dirs.Pop();
+                if (searchOption == SearchOption.AllDirectories)
+                {
+                    try
+                    {
+                        string[] subDirs = Directory.GetDirectories(currentDirPath);
+                        foreach (string subDirPath in subDirs)
+                        {
+                            dirs.Push(subDirPath);
+                        }
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        continue;
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        continue;
+                    }
+                }
+
+                string[] files = null;
+                try
+                {
+                    files = Directory.GetFiles(currentDirPath, searchPattern);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    continue;
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    continue;
+                }
+
+                foreach (string filePath in files)
+                {
+                    yield return filePath;
+                }
+            }
         }
     }
 }
