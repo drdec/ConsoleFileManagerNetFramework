@@ -43,13 +43,13 @@ namespace FileManager
 
                 case "deldir":
                 {
-                      _directories.DeleteDirectory();  
+                    _directories.DeleteDirectory();
                 }
                     break;
 
                 case "delfile":
                 {
-                    _directories.DeleteFile(_path);
+                    _fileWork.DeleteFile(_path);
                 }
                     break;
 
@@ -61,7 +61,7 @@ namespace FileManager
 
                 case "move":
                 {
-                        _directories.MoveCatalog();
+                    _directories.MoveCatalog();
                 }
                     break;
 
@@ -73,13 +73,13 @@ namespace FileManager
 
                 case "create":
                 {
-                        _directories.CreateCatalog();
+                    _directories.CreateCatalog();
                 }
                     break;
 
                 case "rename":
                 {
-                        _directories.Rename();
+                    _directories.Rename();
                 }
                     break;
 
@@ -98,7 +98,7 @@ namespace FileManager
 
                     if (string.IsNullOrEmpty(userInput))
                     {
-                            _directories.ResizeCatalog();
+                        _directories.ResizeCatalog();
                     }
                     else
                     {
@@ -115,15 +115,18 @@ namespace FileManager
 
                 case "search":
                 {
-
+                    _directories.SearchFileAndCatalog(_path);
                 }
                     break;
 
-                    default:
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Неизвестная команда, попробуйте еще раз\n");
-                        Console.ResetColor();
-                        break;
+                default:
+                {
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Неизвестная команда, попробуйте еще раз\n");
+                    Console.ResetColor();
+                }
+                    break;
             }
         }
 

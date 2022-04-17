@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace FileManager
 {
     internal class Directories
     {
         private readonly PathWork Path;
+        private List<string> _listWithFileAndCatalogName;
 
         public Directories()
         {
             Path = new PathWork();
+            _listWithFileAndCatalogName = new List<string>();
         }
 
         /// <summary>
@@ -54,30 +55,16 @@ namespace FileManager
         /// </summary>
         public void DeleteDirectory()
         {
-            DirectoryInfo dir = new DirectoryInfo(PathWork.GetCurrentPath());
-            dir.Delete(true);
-            Console.WriteLine("Каталог удален");
-            Path.BackToLastCatalog();
-        }
-
-
-        /// <summary>
-        /// удаляет выбранный файл
-        /// </summary>
-        /// <param name="file">имя файла с расширением</param>
-        public void DeleteFile(string file)
-        {
-            string path = PathWork.GetCurrentPath();
-
-            if (!path.EndsWith("\\"))
+            Console.WriteLine("Если вы уверены, что хотите удалить каталог, введите \"да\"\n" +
+                              "В противном случае нажмите Enter");
+            string proof = Console.ReadLine();
+            if (proof == "да")
             {
-                path += "\\";
+                DirectoryInfo dir = new DirectoryInfo(PathWork.GetCurrentPath());
+                dir.Delete(true);
+                Console.WriteLine("Каталог удален");
+                Path.BackToLastCatalog();
             }
-
-            path += file;
-
-            File.Delete(path);
-            Console.WriteLine("Файл удален");
         }
 
 
@@ -132,15 +119,58 @@ namespace FileManager
             }
         }
 
+        /// <summary>
+        /// Выводить информацию о размере каталога
+        /// </summary>
         public void ResizeCatalog()
         {
-
             long dirSize = SafeEnumerateFiles(PathWork.GetCurrentPath(), "*.*", SearchOption.AllDirectories)
                 .Sum(n => new FileInfo(n).Length);
             
             Console.WriteLine($"Размер файла - {dirSize} байт");
             double size = (double)dirSize / 1048576;
             Console.WriteLine($"Размер файла - {size} MБ");
+        }
+
+        public void SearchFileAndCatalog(string name)
+        {
+            SearchFileAndCatalog(name, PathWork.GetCurrentPath());
+
+            foreach (var i in _listWithFileAndCatalogName)
+            {
+                Console.WriteLine(i);
+            }
+        }
+
+        /// <summary>
+        /// Поиск файлов и каталогов, где имеется совпадение с данной подстрокой
+        /// </summary>
+        /// <param name="name">имя файла</param>
+        /// <param name="path">путь</param>
+        private void SearchFileAndCatalog(string name, string path)
+        {
+            var dirsCat = Directory.GetDirectories(path);
+
+            foreach (var i in dirsCat)
+            {
+                if (i.Contains(name))
+                {
+                    _listWithFileAndCatalogName.Add(i);
+                }
+
+                SearchFileAndCatalog(name, i);
+            }
+
+            var dirsFiles = Directory.GetFiles(path);
+
+            foreach (var i in dirsFiles)
+            {
+                if (i.Contains(name))
+                {
+                    _listWithFileAndCatalogName.Add(i);
+                }
+            }
+
         }
 
         private static IEnumerable<string> SafeEnumerateFiles(string path, string searchPattern = "*.*",
